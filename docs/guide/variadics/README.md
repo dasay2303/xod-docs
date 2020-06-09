@@ -4,87 +4,84 @@ title: Variadic Nodes
 
 # Variadic Nodes
 
-There are operations which can be applied to an arbitrary number of input
-values. For example, consider the addition operation. Sure, intuitively you know
-how it works for two values, three values, or 42 values:
+Существуют операции, которые можно применять к произвольному количеству 
+входных значений. Например, рассмотрим операцию сложения. Конечно, вы 
+интуитивно знаете, как это работает для двух значений, трех значений или 42 значений:
 
-- 1 + 6 = 7
-- 1 + 6 + 3 = 10
-- 1 + 6 + 3 + …more summands… = someNumber
+1 + 6 = 7
+1 + 6 + 3 = 10
+1 + 6 + 3 +… больше слагаемых… = какое-то число
+Другие примеры таких функций включают в себя умножение чисел, конкатенацию 
+или объединение строк, логическое «И» или «ИЛИ», выбор n-го элемента и так далее.
 
-Other examples of such functions include number multiplication, string
-concatenation or joining, booleans AND’ing or OR’ing, n-th element choice, and
-so on.
+Для естественной поддержки таких операций XOD предлагает механизм, называемый 
+узлами с переменными координатами . Узлы Variadic могут масштабировать 
+количество своих входных контактов, чтобы принимать больше или меньше значений.
 
-To natively support such operations, XOD offers a mechanism called _variadic_
-nodes. The variadic nodes can scale the number of their input pins to accept
-more or fewer values.
-
-In XOD IDE the variadic nodes have a little gripper on the right, and the pins
-which can scale are marked with the ellipsis (⋯) on mouse hover. Drag the right
-border of the node to add as many groups of variadic pins as you need.
-
+В XOD IDE вариационные узлы имеют небольшой захват справа, а штифты, которые могут
+масштабироваться, отмечены многоточием (⋯) при наведении курсора мыши. Перетащите 
+правую границу узла, чтобы добавить столько групп выводов, сколько вам нужно.
 ![Overview](./overview.patch.png)
 
-The variadic pins replication count is called _arity level_. By default, the
-arity level for a node is 1. When you add a pin to, for example, the `multiply`
-node, the arity level becomes 2, etc.
+Счетчик репликации вариационных пинов называется called _arity level_. По 
+умолчанию уровень арности для узла равен 1. При добавлении контакта, например, к
+multiply узлу, уровень арности становится равным 2 и т. Д.
 
-## Expansion
+## Расширение
 
-A variadic node developer is responsible only for creating a node implementation
-for the first arity level. All subsequent arity level implementations are
-induced automatically by XOD. To achieve it, when transpiling the program each
-particular variadic node passes an _expansion_ stage in which the system
-replaces it with a cascade of primitive level-1 nodes. The replacement principle
-is better illustrated with an example.
+Разработчик узла с вариадическим кодом отвечает только за создание 
+реализации узла для первого уровня арности. Все последующие реализации 
+уровня арности автоматически инициируются XOD. Чтобы достичь этого, при
+передаче программы каждый конкретный вариационный узел проходит этап 
+расширения, на котором система заменяет его каскадом примитивных узлов
+уровня 1. Принцип замены лучше проиллюстрирован на примере.
 
 ![Expansion](./expansion.patch.png)
 
 <div class="ui segment note">
-<span class="ui ribbon label">Pro</span>
-Developers with functional programming experience could note the expansion is
-nothing more but a reduce/fold operation. Indeed! XOD variadics work through
-input value list folding.
+<span class="ui ribbon label">профессионал</span>
+Разработчики с опытом функционального программирования могут заметить, 
+что расширение - это не что иное, как операция уменьшения / сгиба. 
+Верно! Варианты XOD работают через свертывание списка входных значений.
 </div>
 
 ## Bigger arity steps
 
-In the examples above the nodes have exactly one variadic pin. It is not always
-the case. Nodes may have two or three variadic pins. An example of such node is
-[`select`](/libs/xod/core/select/) which have two. Every time you increment an
-arity level of the `select` node it gets two additional input pins.
+В приведенных выше примерах узлы имеют ровно один вариационный штифт. 
+Это не всегда так. Узлы могут иметь два или три стержня с переменным углом. 
+Примером такого узла явлется [`select`](/libs/xod/core/select/).Каждый раз, 
+когда вы увеличиваете уровень арности `select` узла, он получает два 
+дополнительных входных контакта.
 
 ![Select node with arity step 2](./select-a2.patch.png)
 
-Formally speaking, the number of variadic input pins which replicate together in
-a group is called _arity step_.
+Формально говоря, число входных контактов Variadic, которые реплицируются 
+вместе в группе, называется _arity step_.
 
-Expansion process for the nodes with an arity step greater than one looks
-similar.
+Процесс расширения для узлов с шагом арности больше единицы выглядит аналогично.
 
 ![Select node expansion](./select-a2-expansion.patch.png)
 
-## Shared pins
+## Общие контакты
 
-When a variadic node has more inputs than necessary to expand it, the leftmost
-extraneous pins are shared between all nodes in the cascade.
+Когда вариационный узел имеет больше входных данных, чем необходимо для его 
+расширения, крайние левые посторонние выводы распределяются между всеми узлами 
+в каскаде.
 
-For example, consider textual string join operation which concatenates input
-strings placing a specified delimiter between them (e.g., space or comma). The
-delimiter will be shared between all expanded nodes, so you’ll get the result
-you expect.
+Например, рассмотрим операцию соединения текстовой строки, которая объединяет 
+входные строки, помещая между ними указанный разделитель (например, пробел или запятую). 
+Разделитель будет использоваться всеми развернутыми узлами, поэтому вы 
+получите ожидаемый результат.
 
 ![Join node expansion](./join-expansion.patch.png)
 
-In the example above there was a single shared pin. However, there can be more
-if the author decided the node to be so.
+В приведенном выше примере был один общий контакт. Однако, может быть больше, 
+если автор решил, что узел будет таким.
 
 ---
 
-As a node user, you’ll rarely meditate on which pins are shared, and which are
-not. The usage pattern should be pretty apparent from the node designation.
+Как пользователь узла, вы редко будете размышлять о том, какие контакты являются 
+общими, а какие нет. Шаблон использования должен быть довольно очевидным из обозначения узла.
 
-Arranging pins properly is a puzzle for the node creator. Read about all rules
-and nuances if you want to [create a new variadic node](../creating-variadics/)
-by yourself.
+Правильно расставить булавки - головоломка для создателя узла. Прочитайте обо всех правилах и 
+нюансах, если вы хотите [создать новый вариационный узел](../creating-variadics/) самостоятельно.
